@@ -69,12 +69,12 @@ impl Lexer {
         };
         lex.read_char();
 
-        return lex;
+        lex
     }
 
     pub fn from_file(file_path: String) -> Lexer {
         let contents = fs::read_to_string(file_path).expect("Passed file does not exist.");
-        return Lexer::new(contents);
+        Lexer::new(contents)
     }
 
     pub fn next_token(&mut self) -> Option<Token> {
@@ -88,36 +88,36 @@ impl Lexer {
             b'%' => Some(Token::OpMod),
             b'&' => Some(Token::OpAnd),
             b'|' => Some(Token::OpOr),
-            b'>' => self.peek().and_then(|next_ch| {
+            b'>' => self.peek().map(|next_ch| {
                 if next_ch == b'=' {
                     self.read_char();
-                    Some(Token::OpGe)
+                    Token::OpGe
                 } else {
-                    Some(Token::OpGt)
+                    Token::OpGt
                 }
             }),
-            b'=' => self.peek().and_then(|next_ch| {
+            b'=' => self.peek().map(|next_ch| {
                 if next_ch == b'=' {
                     self.read_char();
-                    Some(Token::OpEq)
+                    Token::OpEq
                 } else {
-                    Some(Token::Assignment)
+                    Token::Assignment
                 }
             }),
-            b'!' => self.peek().and_then(|next_ch| {
+            b'!' => self.peek().map(|next_ch| {
                 if next_ch == b'=' {
                     self.read_char();
-                    Some(Token::OpNe)
+                    Token::OpNe
                 } else {
-                    Some(Token::OpNot)
+                    Token::OpNot
                 }
             }),
-            b'<' => self.peek().and_then(|next_ch| {
+            b'<' => self.peek().map(|next_ch| {
                 if next_ch == b'=' {
                     self.read_char();
-                    Some(Token::OpLe)
+                    Token::OpLe
                 } else {
-                    Some(Token::OpLt)
+                    Token::OpLt
                 }
             }),
             b';' => Some(Token::SemiColon),
@@ -153,7 +153,7 @@ impl Lexer {
         });
 
         self.read_char();
-        return tok;
+        tok
     }
 
     fn read_char(&mut self) {
@@ -176,14 +176,14 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        while let Some(_) = self.ch.filter(|&ch| ch.is_ascii_whitespace()) {
+        while self.ch.filter(|&ch| ch.is_ascii_whitespace()).is_some() {
             self.read_char()
         }
     }
 
     fn read_identifier(&mut self) -> String {
         let start_pos = self.position;
-        while let Some(_) = self.ch.filter(|&ch| ch.is_ascii_alphabetic()) {
+        while self.ch.filter(|&ch| ch.is_ascii_alphabetic()).is_some() {
             self.read_char();
         }
 
@@ -192,13 +192,13 @@ impl Lexer {
 
     fn read_num(&mut self) -> String {
         let start_pos = self.position;
-        while let Some(_) = self.ch.filter(|&ch| ch.is_ascii_digit()) {
+        while self.ch.filter(|&ch| ch.is_ascii_digit()).is_some() {
             self.read_char();
         }
 
-        if let Some(_) = self.ch.filter(|&ch| ch == b'.') {
+        if self.ch.filter(|&ch| ch == b'.').is_some() {
             self.read_char();
-            while let Some(_) = self.ch.filter(|&ch| ch.is_ascii_digit()) {
+            while self.ch.filter(|&ch| ch.is_ascii_digit()).is_some() {
                 self.read_char();
             }
         }
@@ -208,7 +208,7 @@ impl Lexer {
 
     fn read_comment(&mut self) -> String {
         let start_pos = self.position;
-        while let Some(_) = self.ch.filter(|&ch| !ch == b'\n') {
+        while self.ch.filter(|&ch| !ch == b'\n').is_some() {
             self.read_char();
         }
 
