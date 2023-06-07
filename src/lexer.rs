@@ -13,6 +13,7 @@ pub enum Token {
     KwElse,
     KwWhile,
     KwReturn,
+    KwBreak,
 
     // Literals
     NumLiteral(String),
@@ -145,6 +146,7 @@ impl Lexer {
                     "else" => Token::KwElse,
                     "while" => Token::KwWhile,
                     "return" => Token::KwReturn,
+                    "break" => Token::KwBreak,
                     _ => Token::Identifier(ident),
                 })
             }
