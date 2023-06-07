@@ -17,7 +17,6 @@ pub enum Token {
 
     // Literals
     NumLiteral(String),
-    StrLiteral(String),
 
     // Operators
     OpPlus,
