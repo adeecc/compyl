@@ -130,10 +130,7 @@ impl Lexer {
             b'}' => Some(Token::RSquirly),
             b'[' => Some(Token::LBracket),
             b']' => Some(Token::RBracket),
-            b'?' => {
-                self.read_char();
-                Some(Token::Comment(self.read_comment()))
-            }
+            b'?' => Some(Token::Comment(self.read_comment())),
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                 let ident = self.read_identifier();
                 Some(match ident.as_str() {
@@ -161,10 +158,10 @@ impl Lexer {
     fn read_char(&mut self) {
         if self.read_position >= self.input.len() {
             self.ch = None;
-            return;
+        } else {
+            self.ch = Some(self.input[self.read_position]);
         }
 
-        self.ch = Some(self.input[self.read_position]);
         self.position = self.read_position;
         self.read_position += 1;
     }
@@ -185,36 +182,42 @@ impl Lexer {
 
     fn read_identifier(&mut self) -> String {
         let start_pos = self.position;
-        while self.ch.filter(|&ch| ch.is_ascii_alphabetic()).is_some() {
+
+        while self
+            .peek()
+            .filter(|&ch| ch.is_ascii_alphabetic() || ch == b'_')
+            .is_some()
+        {
             self.read_char();
         }
 
-        return String::from_utf8_lossy(&self.input[start_pos..self.position]).to_string();
+        return String::from_utf8_lossy(&self.input[start_pos..=self.position]).to_string();
     }
 
     fn read_num(&mut self) -> String {
         let start_pos = self.position;
-        while self.ch.filter(|&ch| ch.is_ascii_digit()).is_some() {
+        while self.peek().filter(|&ch| ch.is_ascii_digit()).is_some() {
             self.read_char();
         }
 
-        if self.ch.filter(|&ch| ch == b'.').is_some() {
+        if self.peek().filter(|&ch| ch == b'.').is_some() {
             self.read_char();
-            while self.ch.filter(|&ch| ch.is_ascii_digit()).is_some() {
+            while self.peek().filter(|&ch| ch.is_ascii_digit()).is_some() {
                 self.read_char();
             }
         }
 
-        return String::from_utf8_lossy(&self.input[start_pos..self.position]).to_string();
+        return String::from_utf8_lossy(&self.input[start_pos..=self.position]).to_string();
     }
 
     fn read_comment(&mut self) -> String {
         let start_pos = self.position;
-        while self.ch.filter(|&ch| !ch == b'\n').is_some() {
+
+        while self.peek().filter(|&ch| ch != b'\n').is_some() {
             self.read_char();
         }
 
-        return String::from_utf8_lossy(&self.input[start_pos..self.position]).to_string();
+        return String::from_utf8_lossy(&self.input[start_pos..=self.position]).to_string();
     }
 }
 
