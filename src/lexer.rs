@@ -222,10 +222,22 @@ impl Lexer {
 mod test {
     use super::{Lexer, Token};
 
+    fn test(input: String, expected_tokens: Vec<Token>) {
+        let mut lexer = Lexer::new(input);
+        for expected_token in expected_tokens {
+            let next_token = lexer
+                .next_token()
+                .expect("Next token is none when it should not have been.");
+            println!("expected: {:?}, received {:?}", expected_token, next_token);
+            assert_eq!(expected_token, next_token)
+        }
+
+        assert_eq!(lexer.next_token(), None);
+    }
+
     #[test]
-    fn get_next_token() {
+    fn test_get_next_token() {
         let input = "+-*/%&|!>>===!=<<=;:,(){}[]";
-        let mut lexer = Lexer::new(input.into());
 
         let expected_tokens = vec![
             Token::OpPlus,
@@ -253,12 +265,106 @@ mod test {
             Token::RBracket,
         ];
 
-        for expected_token in expected_tokens {
-            let next_token = lexer.next_token().expect("Next token is none.");
-            println!("expected: {:?}, received {:?}", expected_token, next_token);
-            assert_eq!(expected_token, next_token)
+        test(input.into(), expected_tokens);
+    }
+
+    #[test]
+    fn test_expressions() {
+        let input = "let a = 5;";
+        //                 0123456789
+        let expected_tokens = vec![
+            Token::KwLet,
+            Token::Identifier("a".into()),
+            Token::Assignment,
+            Token::NumLiteral("5".into()),
+            Token::SemiColon,
+        ];
+
+        test(input.into(), expected_tokens);
+    }
+
+    #[test]
+    fn test_comment() {
+        let input = "
+        let a = 5;
+        ? Foo+
+        let b = 10;
+        ? Bar_
+        ";
+        //                 0123456789
+        let expected_tokens = vec![
+            Token::KwLet,
+            Token::Identifier("a".into()),
+            Token::Assignment,
+            Token::NumLiteral("5".into()),
+            Token::SemiColon,
+            Token::Comment("? Foo+".into()),
+            Token::KwLet,
+            Token::Identifier("b".into()),
+            Token::Assignment,
+            Token::NumLiteral("10".into()),
+            Token::SemiColon,
+            Token::Comment("? Bar_".into()),
+        ];
+
+        test(input.into(), expected_tokens);
+    }
+
+    #[test]
+    fn test_complete_lexer() {
+        let input = "let five = 5;
+        let ten = 10.0;
+        fn add(x, y) {
+            return x + y;
         }
 
-        assert_eq!(lexer.next_token(), None);
+        if (5 <= 10) {
+            return add(5, 10);
+        }
+
+        if (five != ten) {
+            return add(five, ten);
+        }
+
+        10 == 10.0
+        9.9 < 10
+
+        let x = 7;
+        while (11 >= 10) {
+            x = x + five;
+            if (x > 11) {
+                break;
+            }
+        }
+        ";
+
+        let expected_tokens = vec![
+            Token::KwLet,
+            Token::Identifier("five".into()),
+            Token::Assignment,
+            Token::NumLiteral("5".into()),
+            Token::SemiColon,
+            Token::KwLet,
+            Token::Identifier("ten".into()),
+            Token::Assignment,
+            Token::NumLiteral("10.0".into()),
+            Token::SemiColon,
+            Token::KwFn,
+            Token::Identifier("add".into()),
+            Token::Lparen,
+            Token::Identifier("x".into()),
+            Token::Comma,
+            Token::Identifier("y".into()),
+            Token::RParen,
+            Token::LSquirly,
+            Token::KwReturn,
+            Token::Identifier("x".into()),
+            Token::OpPlus,
+            Token::Identifier("y".into()),
+            Token::SemiColon,
+            Token::RSquirly,
+        ];
+
+        test(input.into(), expected_tokens)
     }
 }
