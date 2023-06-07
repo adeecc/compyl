@@ -131,7 +131,7 @@ impl Lexer {
             b']' => Some(Token::RBracket),
             b'?' => Some(Token::Comment(self.read_comment())),
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                let ident = self.read_identifier();
+                let ident = self.read_kw_or_identifier();
                 Some(match ident.as_str() {
                     "let" => Token::KwLet,
                     "fn" => Token::KwFn,
@@ -146,7 +146,7 @@ impl Lexer {
                     _ => Token::Identifier(ident),
                 })
             }
-            b'0'..=b'9' => Some(Token::NumLiteral(self.read_num())),
+            b'0'..=b'9' => Some(Token::NumLiteral(self.read_num_literal())),
             _ => None,
         });
 
@@ -179,7 +179,7 @@ impl Lexer {
         }
     }
 
-    fn read_identifier(&mut self) -> String {
+    fn read_kw_or_identifier(&mut self) -> String {
         let start_pos = self.position;
 
         while self
@@ -193,7 +193,7 @@ impl Lexer {
         return String::from_utf8_lossy(&self.input[start_pos..=self.position]).to_string();
     }
 
-    fn read_num(&mut self) -> String {
+    fn read_num_literal(&mut self) -> String {
         let start_pos = self.position;
         while self.peek().filter(|&ch| ch.is_ascii_digit()).is_some() {
             self.read_char();
